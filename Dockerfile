@@ -1,5 +1,5 @@
+Dockerfile for Spring Boot deployment on Render
 STAGE 1: BUILD THE APPLICATION
-CRITICAL FIX: Base image tag simplified to 'maven:21-jdk'
 FROM maven:21-jdk AS builder
 
 Set the working directory inside the container
@@ -12,13 +12,13 @@ COPY mvnw pom.xml ./
 Add execute permission to the Maven wrapper
 RUN chmod +x mvnw
 
-Download dependencies (only if pom.xml changes)
+Download dependencies
 RUN mvn dependency:go-offline
 
 Copy the source code
 COPY src/ ./src/
 
-Package the application. This creates the JAR file in the 'target' directory.
+Package the application (creates app.jar in target folder)
 RUN mvn clean package -DskipTests
 
 STAGE 2: CREATE THE FINAL SMALL IMAGE
@@ -31,4 +31,6 @@ EXPOSE 8080
 
 Copy the built JAR from the builder stage
 COPY --from=builder /app/target/app.jar app.jar
+
+Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
