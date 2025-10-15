@@ -1,5 +1,5 @@
---- STAGE 1: BUILD THE APPLICATION ---
-CRITICAL FIX: Changed the base image tag to 'maven:21-jdk' which is a standard, available image
+STAGE 1: BUILD THE APPLICATION
+CRITICAL FIX: Base image tag simplified to 'maven:21-jdk'
 FROM maven:21-jdk AS builder
 
 Set the working directory inside the container
@@ -21,10 +21,14 @@ COPY src/ ./src/
 Package the application. This creates the JAR file in the 'target' directory.
 RUN mvn clean package -DskipTests
 
---- STAGE 2: CREATE THE FINAL SMALL IMAGE ---
+STAGE 2: CREATE THE FINAL SMALL IMAGE
 FROM openjdk:21-jdk-slim
 WORKDIR /app
+
+Environment variable required by Render for PORT
 ENV PORT=8080
 EXPOSE 8080
+
+Copy the built JAR from the builder stage
 COPY --from=builder /app/target/app.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
