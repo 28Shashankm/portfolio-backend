@@ -1,36 +1,14 @@
-Dockerfile for Spring Boot deployment on Render
-STAGE 1: BUILD THE APPLICATION
-FROM maven:21-jdk AS builder
+# Dockerfile for Spring Boot deployment on Render
 
-Set the working directory inside the container
+# ---- STAGE 1: BUILD THE APPLICATION ----
+FROM maven:3.9.6-eclipse-temurin-21 AS builder
 WORKDIR /app
-
-Copy the Maven wrapper files (mvnw, .mvn) and pom.xml
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-
-Add execute permission to the Maven wrapper
-RUN chmod +x mvnw
-
-Download dependencies
-RUN mvn dependency:go-offline
-
-Copy the source code
-COPY src/ ./src/
-
-Package the application (creates app.jar in target folder)
+COPY . .
 RUN mvn clean package -DskipTests
 
-STAGE 2: CREATE THE FINAL SMALL IMAGE
-FROM openjdk:21-jdk-slim
+# ---- STAGE 2: RUN THE APPLICATION ----
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
-
-Environment variable required by Render for PORT
-ENV PORT=8080
+COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
-
-Copy the built JAR from the builder stage
-COPY --from=builder /app/target/app.jar app.jar
-
-Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
